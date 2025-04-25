@@ -1,0 +1,3 @@
+[submodule "LLM/ChatGLM-6B"]
+	path = LLM/ChatGLM-6B
+	url = https://github.com/THUDM/ChatGLM-6B.git
