@@ -1,10 +1,24 @@
 import { useState } from 'react';
-import { Menu, X, ChevronRight, ChevronDown, ArrowRight, User, Lock, Activity, FileText, BarChart2, Heart, LogIn, PieChart, Coffee, Droplet } from 'lucide-react';
+import { Menu, X, ChevronRight, ChevronDown, ArrowRight, User, Lock, Activity, FileText, BarChart2, Heart, LogIn, PieChart, Coffee, Droplet, Brain, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function DiabetesTrackerApp() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [isLoginFormVisible, setIsLoginFormVisible] = useState(false);
+  const [token, setToken] = useState(null);
+  const [aiPrediction, setAiPrediction] = useState(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionError, setPredictionError] = useState('');
+  const [healthFormData, setHealthFormData] = useState({
+    age: '',
+    gender: '',
+    weight: '',
+    height: '',
+    family_history: null,
+    glucose_level: '',
+    blood_pressure: '',
+    additional_notes: ''
+  });
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -21,6 +35,95 @@ export default function DiabetesTrackerApp() {
 
   const toggleLoginForm = () => {
     setIsLoginFormVisible(!isLoginFormVisible);
+  };
+
+  const handleHealthFormChange = (e) => {
+    const { name, value, type } = e.target;
+    
+    if (type === 'radio' && name === 'family_history') {
+      setHealthFormData({
+        ...healthFormData,
+        family_history: value === 'yes'
+      });
+    } else {
+      setHealthFormData({
+        ...healthFormData,
+        [name]: value
+      });
+    }
+  };
+
+  const submitHealthForm = async (e) => {
+    e.preventDefault();
+    
+    // Reset states
+    setIsPredicting(true);
+    setPredictionError('');
+    setAiPrediction(null);
+    
+    try {
+      // For demo purposes - in production use the token from login
+      // Comment this out if you implement real authentication
+      if (!token) {
+        // Simple login to get token for testing
+        const loginResponse = await fetch('http://localhost:8000/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            'username': 'demo_user', // Use a demo account
+            'password': 'demo_password',
+          }),
+        });
+        
+        if (loginResponse.ok) {
+          const tokenData = await loginResponse.json();
+          setToken(tokenData.access_token);
+        } else {
+          setPredictionError('Authentication failed. Please log in first.');
+          setIsPredicting(false);
+          return;
+        }
+      }
+      
+      const apiToken = token;
+      
+      // Format request data
+      const requestData = {
+        age: healthFormData.age ? parseInt(healthFormData.age) : null,
+        gender: healthFormData.gender || null,
+        weight: healthFormData.weight ? parseFloat(healthFormData.weight) : null,
+        height: healthFormData.height ? parseFloat(healthFormData.height) : null,
+        family_history: healthFormData.family_history,
+        glucose_level: healthFormData.glucose_level ? parseFloat(healthFormData.glucose_level) : null,
+        blood_pressure: healthFormData.blood_pressure || null,
+        additional_notes: healthFormData.additional_notes || null
+      };
+      
+      // Make API request
+      const response = await fetch('http://localhost:8000/chatgpt-predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to get prediction');
+      }
+      
+      const predictionData = await response.json();
+      setAiPrediction(predictionData);
+      
+    } catch (error) {
+      setPredictionError(error.message || 'An error occurred while getting the prediction');
+    } finally {
+      setIsPredicting(false);
+    }
   };
 
   return (
@@ -61,6 +164,12 @@ export default function DiabetesTrackerApp() {
                     className={`px-3 py-2 text-sm font-medium rounded-md transition duration-300 ${activeSection === 'dataInput' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'}`}
                   >
                     Health Data
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection('aiPredictor')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition duration-300 ${activeSection === 'aiPredictor' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'}`}
+                  >
+                    AI Predictor
                   </button>
                   <button 
                     onClick={() => scrollToSection('testimonials')}
@@ -129,6 +238,12 @@ export default function DiabetesTrackerApp() {
                 className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left ${activeSection === 'dataInput' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'}`}
               >
                 Health Data
+              </button>
+              <button 
+                onClick={() => scrollToSection('aiPredictor')}
+                className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left ${activeSection === 'aiPredictor' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'}`}
+              >
+                AI Predictor
               </button>
               <button 
                 onClick={() => scrollToSection('testimonials')}
@@ -535,6 +650,268 @@ export default function DiabetesTrackerApp() {
                     <FileText className="h-4 w-4 mr-1" />
                     Upload medical records
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* AI Predictor Section */}
+        <section 
+          id="aiPredictor" 
+          className="py-16 px-4 bg-gradient-to-br from-indigo-50 to-blue-50"
+        >
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">AI Diabetes Risk Predictor</h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Get personalized diabetes risk assessment and insights using our AI-powered prediction tool.
+              </p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div className="bg-indigo-600 px-6 py-4">
+                  <div className="flex items-center">
+                    <Brain className="h-6 w-6 text-white mr-2" />
+                    <h3 className="text-xl font-bold text-white">AI Health Assessment</h3>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  {!aiPrediction ? (
+                    <form onSubmit={submitHealthForm}>
+                      <div className="mb-6">
+                        <p className="text-gray-700 mb-4">
+                          Enter your health information below for a personalized diabetes risk assessment.
+                          Our AI will analyze your data and provide insights.
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Age
+                          </label>
+                          <input 
+                            type="number" 
+                            name="age"
+                            value={healthFormData.age}
+                            onChange={handleHealthFormChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Your age"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Gender
+                          </label>
+                          <select 
+                            name="gender"
+                            value={healthFormData.gender}
+                            onChange={handleHealthFormChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          >
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Weight (kg)
+                          </label>
+                          <input 
+                            type="number" 
+                            name="weight"
+                            value={healthFormData.weight}
+                            onChange={handleHealthFormChange}
+                            step="0.1"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Your weight in kg"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Height (cm)
+                          </label>
+                          <input 
+                            type="number" 
+                            name="height"
+                            value={healthFormData.height}
+                            onChange={handleHealthFormChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Your height in cm"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Blood Glucose Level (mg/dL)
+                          </label>
+                          <input 
+                            type="number" 
+                            name="glucose_level"
+                            value={healthFormData.glucose_level}
+                            onChange={handleHealthFormChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Recent glucose reading"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Blood Pressure
+                          </label>
+                          <input 
+                            type="text" 
+                            name="blood_pressure"
+                            value={healthFormData.blood_pressure}
+                            onChange={handleHealthFormChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g., 120/80"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                          Family History of Diabetes
+                        </label>
+                        <div className="flex items-center space-x-6">
+                          <div className="flex items-center">
+                            <input 
+                              type="radio" 
+                              id="family_history_yes" 
+                              name="family_history" 
+                              value="yes"
+                              onChange={handleHealthFormChange}
+                              className="mr-2" 
+                            />
+                            <label htmlFor="family_history_yes">Yes</label>
+                          </div>
+                          <div className="flex items-center">
+                            <input 
+                              type="radio" 
+                              id="family_history_no" 
+                              name="family_history" 
+                              value="no"
+                              onChange={handleHealthFormChange}
+                              className="mr-2" 
+                            />
+                            <label htmlFor="family_history_no">No</label>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                          Additional Notes
+                        </label>
+                        <textarea 
+                          name="additional_notes"
+                          value={healthFormData.additional_notes}
+                          onChange={handleHealthFormChange}
+                          rows="3"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Any other health information you'd like to share"
+                        ></textarea>
+                      </div>
+                      
+                      {predictionError && (
+                        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md">
+                          <div className="flex items-center text-red-600">
+                            <AlertCircle className="h-5 w-5 mr-2" />
+                            <p>{predictionError}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-end">
+                        <button 
+                          type="submit"
+                          disabled={isPredicting}
+                          className={`px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center ${isPredicting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                          {isPredicting ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Brain className="mr-2 h-5 w-5" />
+                              Get AI Assessment
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="prediction-results">
+                      <div className="mb-6 flex justify-between items-center">
+                        <h4 className="text-xl font-semibold text-gray-900">Assessment Results</h4>
+                        <button 
+                          onClick={() => setAiPrediction(null)}
+                          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                        >
+                          Start New Assessment
+                        </button>
+                      </div>
+                      
+                      <div className="mb-8">
+                        <div className={`p-4 rounded-lg ${aiPrediction.prediction ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                          <div className="flex items-center">
+                            {aiPrediction.prediction ? (
+                              <AlertCircle className="h-6 w-6 text-red-600 mr-3" />
+                            ) : (
+                              <CheckCircle className="h-6 w-6 text-green-600 mr-3" />
+                            )}
+                            <div>
+                              <h5 className={`font-bold text-lg ${aiPrediction.prediction ? 'text-red-700' : 'text-green-700'}`}>
+                                {aiPrediction.prediction ? 'Higher Risk of Diabetes' : 'Lower Risk of Diabetes'}
+                              </h5>
+                              {aiPrediction.confidence && (
+                                <p className="text-sm text-gray-600">Confidence: {Math.round(aiPrediction.confidence * 100)}%</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <h5 className="font-semibold text-gray-900 mb-3">AI Insights:</h5>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-gray-700 whitespace-pre-line">{aiPrediction.insights}</p>
+                        </div>
+                      </div>
+                      
+                      {aiPrediction.recommendations && aiPrediction.recommendations.length > 0 && (
+                        <div className="mb-6">
+                          <h5 className="font-semibold text-gray-900 mb-3">Recommendations:</h5>
+                          <ul className="list-disc pl-5 space-y-2">
+                            {aiPrediction.recommendations.map((rec, index) => (
+                              <li key={index} className="text-gray-700">{rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="mt-8 border-t border-gray-200 pt-6">
+                        <p className="text-sm text-gray-500">
+                          <strong>Note:</strong> This assessment is based on AI analysis and should not replace professional medical advice. 
+                          Please consult with a healthcare provider for accurate diagnosis and treatment.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
