@@ -264,8 +264,8 @@ Finally, we thank the healthcare professionals who provided feedback during the 
 
 ## Contact and Support
 
-For questions, feedback, or support regarding the T2D Prediction System, please contact the development team at support@t2dprediction.org. We welcome contributions from the community and are committed to continuously improving the system based on user feedback and advances in diabetes research.
+For questions, feedback, or support regarding the T2D Prediction System, please contact the development team at abdzahirmoh@gmail.com. We welcome contributions from the community and are committed to continuously improving the system based on user feedback and advances in diabetes research.
 
-For technical issues or feature requests, please submit an issue through the project's GitHub repository. For collaboration inquiries or partnership opportunities, please contact our team directly at partnerships@t2dprediction.org.
+For technical issues or feature requests, please submit an issue through the project's GitHub repository. For collaboration inquiries or partnership opportunities, please contact our team directly at abdzahirmoh@gmail.com.
 
 Our documentation is regularly updated to reflect new features and improvements. Visit our website at https://webapp-frontend-voa8.vercel.app/ for the latest information and resources related to the T2D Prediction System.
