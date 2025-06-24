@@ -244,13 +244,21 @@ This commitment to ongoing refinement ensures that the system remains at the cut
 
 ## License Information
 
-The T2D Prediction System is released under the MIT License, a permissive open-source license that allows for maximum flexibility in using, modifying, and distributing the software. The full text of the license can be found in the LICENSE file included in the repository.
+The T2D Prediction System is licensed under the [Apache License 2.0](LICENSE), a permissive open-source license that allows broad usage, modification, and distribution while providing protections for contributors, including patent rights.
 
-The MIT License grants permission, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, and to permit persons to whom the software is furnished to do so, subject to the following conditions:
+You are free to use, modify, and distribute this software under the conditions of the license. However, you must preserve the original copyright notice and include a NOTICE file with any significant modifications.
 
-The copyright notice and permission notice shall be included in all copies or substantial portions of the software.
+> Copyright [2024] Abdullah Dahabre and contributors  
+> Licensed under the Apache License, Version 2.0 (the "License");  
+> you may not use this file except in compliance with the License.  
+> You may obtain a copy of the License at  
+> https://www.apache.org/licenses/LICENSE-2.0
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Unless required by applicable law or agreed to in writing, software  
+distributed under the License is distributed on an "AS IS" BASIS,  
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  
+See the License for the specific language governing permissions and  
+limitations under the License.
 
 ## Acknowledgments
 
